@@ -1,0 +1,1 @@
+// TODO move all the code from index.ts to mango-logs.ts
