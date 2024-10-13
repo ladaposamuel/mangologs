@@ -41,7 +41,11 @@ export interface StorageProvider {
    * @param limit The maximum number of requests to return
    * @param offset The number of requests to skip (for pagination)
    */
-  searchRequests(criteria: Partial<MonitoredRequest>, limit: number, offset: number): Promise<MonitoredRequest[]>;
+  searchRequests(
+    criteria: Partial<MonitoredRequest>,
+    limit: number,
+    offset: number,
+  ): Promise<MonitoredRequest[]>;
 
   /**
    * Delete monitored requests older than a specified date.

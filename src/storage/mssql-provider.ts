@@ -1,6 +1,8 @@
-import { StorageProvider, RequestStats } from './interfaces/storage-provider.interface';
-import { MonitoredRequest } from '../core/monitor';
 import * as sql from 'mssql';
+
+import { MonitoredRequest } from '../core/monitor';
+
+import { StorageProvider, RequestStats } from './interfaces/storage-provider.interface';
 
 export class MSSQLStorageProvider implements StorageProvider {
   private pool: sql.ConnectionPool;
@@ -35,7 +37,8 @@ export class MSSQLStorageProvider implements StorageProvider {
   }
 
   async store(request: MonitoredRequest): Promise<void> {
-    await this.pool.request()
+    await this.pool
+      .request()
       .input('id', sql.NVarChar, request.id)
       .input('method', sql.NVarChar, request.request.method)
       .input('url', sql.NVarChar, request.request.url)
@@ -47,18 +50,17 @@ export class MSSQLStorageProvider implements StorageProvider {
       .input('requestHeaders', sql.NVarChar, JSON.stringify(request.request.headers))
       .input('responseHeaders', sql.NVarChar, JSON.stringify(request.response.headers))
       .input('requestBody', sql.NVarChar, JSON.stringify(request.request.body))
-      .input('responseBody', sql.NVarChar, JSON.stringify(request.response.body))
-      .query(`
+      .input('responseBody', sql.NVarChar, JSON.stringify(request.response.body)).query(`
         INSERT INTO MonitoredRequests (id, method, url, statusCode, startTime, endTime, latency, serviceName, requestHeaders, responseHeaders, requestBody, responseBody)
         VALUES (@id, @method, @url, @statusCode, @startTime, @endTime, @latency, @serviceName, @requestHeaders, @responseHeaders, @requestBody, @responseBody)
       `);
   }
 
   async getStats(startDate: Date, endDate: Date): Promise<RequestStats> {
-    const result = await this.pool.request()
+    const result = await this.pool
+      .request()
       .input('startDate', sql.BigInt, startDate.getTime())
-      .input('endDate', sql.BigInt, endDate.getTime())
-      .query(`
+      .input('endDate', sql.BigInt, endDate.getTime()).query(`
         SELECT 
           COUNT(*) as totalRequests,
           AVG(latency) as averageLatency,
@@ -77,16 +79,18 @@ export class MSSQLStorageProvider implements StorageProvider {
       maxLatency: 0,
       minLatency: Number.MAX_SAFE_INTEGER,
       requestsPerEndpoint: {},
-      statusCodeDistribution: {}
+      statusCodeDistribution: {},
     };
 
-    result.recordset.forEach(row => {
+    result.recordset.forEach((row) => {
       stats.totalRequests += row.totalRequests;
       stats.averageLatency += row.averageLatency * row.totalRequests;
       stats.maxLatency = Math.max(stats.maxLatency, row.maxLatency);
       stats.minLatency = Math.min(stats.minLatency, row.minLatency);
-      stats.requestsPerEndpoint[row.url] = (stats.requestsPerEndpoint[row.url] || 0) + row.totalRequests;
-      stats.statusCodeDistribution[row.statusCode] = (stats.statusCodeDistribution[row.statusCode] || 0) + row.totalRequests;
+      stats.requestsPerEndpoint[row.url] =
+        (stats.requestsPerEndpoint[row.url] || 0) + row.totalRequests;
+      stats.statusCodeDistribution[row.statusCode] =
+        (stats.statusCodeDistribution[row.statusCode] || 0) + row.totalRequests;
     });
 
     stats.averageLatency /= stats.totalRequests;
@@ -95,7 +99,8 @@ export class MSSQLStorageProvider implements StorageProvider {
   }
 
   async getRequestById(id: string): Promise<MonitoredRequest | null> {
-    const result = await this.pool.request()
+    const result = await this.pool
+      .request()
       .input('id', sql.NVarChar, id)
       .query('SELECT * FROM MonitoredRequests WHERE id = @id');
 
@@ -107,7 +112,11 @@ export class MSSQLStorageProvider implements StorageProvider {
     return this.rowToMonitoredRequest(row);
   }
 
-  async searchRequests(criteria: Partial<MonitoredRequest>, limit: number, offset: number): Promise<MonitoredRequest[]> {
+  async searchRequests(
+    criteria: Partial<MonitoredRequest>,
+    limit: number,
+    offset: number,
+  ): Promise<MonitoredRequest[]> {
     let query = 'SELECT * FROM MonitoredRequests WHERE 1=1';
     const request = this.pool.request();
 
@@ -126,7 +135,8 @@ export class MSSQLStorageProvider implements StorageProvider {
   }
 
   async deleteRequestsOlderThan(date: Date): Promise<number> {
-    const result = await this.pool.request()
+    const result = await this.pool
+      .request()
       .input('date', sql.BigInt, date.getTime())
       .query('DELETE FROM MonitoredRequests WHERE startTime < @date');
 
@@ -144,17 +154,17 @@ export class MSSQLStorageProvider implements StorageProvider {
         method: row.method,
         url: row.url,
         headers: JSON.parse(row.requestHeaders),
-        body: JSON.parse(row.requestBody)
+        body: JSON.parse(row.requestBody),
       },
       response: {
         statusCode: row.statusCode,
         headers: JSON.parse(row.responseHeaders),
-        body: JSON.parse(row.responseBody)
+        body: JSON.parse(row.responseBody),
       },
       startTime: row.startTime,
       endTime: row.endTime,
       latency: row.latency,
-      serviceName: row.serviceName
+      serviceName: row.serviceName,
     };
   }
 }
