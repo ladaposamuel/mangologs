@@ -1,6 +1,8 @@
-import { LoggerProvider,Logger, LogLevel, LogEntry } from './interfaces/logger.interface';
+import { LoggerProvider, Logger, LogLevel, LogEntry } from './interfaces/logger.interface';
 
 export { LogLevel, LogEntry };
+
+type Metadata = Record<string, unknown>;
 
 export class DefaultLogger implements Logger {
   private logLevel: LogLevel;
@@ -15,13 +17,18 @@ export class DefaultLogger implements Logger {
     return Object.values(LogLevel).indexOf(level) >= Object.values(LogLevel).indexOf(this.logLevel);
   }
 
-  private createLogEntry(level: LogLevel, message: string, context?: string, metadata?: Record<string, any>): LogEntry {
+  private createLogEntry(
+    level: LogLevel,
+    message: string,
+    context?: string,
+    metadata?: Metadata,
+  ): LogEntry {
     return {
       level,
       message,
       timestamp: new Date(),
       context: context || this.context,
-      metadata
+      metadata,
     };
   }
 
@@ -29,31 +36,31 @@ export class DefaultLogger implements Logger {
     console.log(JSON.stringify(entry));
   }
 
-  debug(message: string, context?: string, metadata?: Record<string, any>): void {
+  debug(message: string, context?: string, metadata?: Metadata): void {
     if (this.shouldLog(LogLevel.DEBUG)) {
       this.logMessage(this.createLogEntry(LogLevel.DEBUG, message, context, metadata));
     }
   }
 
-  info(message: string, context?: string, metadata?: Record<string, any>): void {
+  info(message: string, context?: string, metadata?: Metadata): void {
     if (this.shouldLog(LogLevel.INFO)) {
       this.logMessage(this.createLogEntry(LogLevel.INFO, message, context, metadata));
     }
   }
 
-  warn(message: string, context?: string, metadata?: Record<string, any>): void {
+  warn(message: string, context?: string, metadata?: Metadata): void {
     if (this.shouldLog(LogLevel.WARN)) {
       this.logMessage(this.createLogEntry(LogLevel.WARN, message, context, metadata));
     }
   }
 
-  error(message: string, context?: string, metadata?: Record<string, any>): void {
+  error(message: string, context?: string, metadata?: Metadata): void {
     if (this.shouldLog(LogLevel.ERROR)) {
       this.logMessage(this.createLogEntry(LogLevel.ERROR, message, context, metadata));
     }
   }
 
-  log(level: LogLevel, message: string, context?: string, metadata?: Record<string, any>): void {
+  log(level: LogLevel, message: string, context?: string, metadata?: Metadata): void {
     if (this.shouldLog(level)) {
       this.logMessage(this.createLogEntry(level, message, context, metadata));
     }

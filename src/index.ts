@@ -1,15 +1,11 @@
-import { Monitor, MonitoredRequest, RequestData, ResponseData } from './core/monitor';
-import { DefaultLogger, DefaultLoggerProvider } from './core/logger';
-import { MonitorConfig, ConfigProvider } from './core/interfaces/config.interface';
-import { Logger, LoggerProvider, LogLevel, LogEntry } from './core/interfaces/logger.interface';
-import { StorageProvider, RequestStats } from './storage/interfaces/storage-provider.interface';
 import { ExpressAdapter } from './adapters/express-adapter';
-import { NodeAdapter } from './adapters/node-adapter';
 import { NestAdapter } from './adapters/nest-adapter';
+import { NodeAdapter } from './adapters/node-adapter';
+import { MonitorConfig, ConfigProvider } from './core/interfaces/config.interface';
+import { DefaultLoggerProvider } from './core/logger';
+import { Monitor } from './core/monitor';
 import { InMemoryStorageProvider } from './storage/in-memory-provider';
 import { MSSQLStorageProvider } from './storage/mssql-provider';
-import { handleError, ApiMonitorError, isApiMonitorError } from './utils/error-handler';
-import { parseRequest, convertToRequestData, maskSensitiveData } from './utils/request-parser';
 
 export interface MangoLogsConfig extends MonitorConfig {
   apiKey: string;
@@ -20,7 +16,6 @@ export interface MangoLogsConfig extends MonitorConfig {
   redactRequestBody?: string[];
   redactResponseBody?: string[];
 }
-
 export class MangoLogs {
   private monitor: Monitor;
 
@@ -29,7 +24,7 @@ export class MangoLogs {
       getConfig: () => ({
         ...config,
         enabled: true,
-        serviceName: config.serviceName || "MangoLogs",
+        serviceName: config.serviceName || 'MangoLogs',
         sampleRate: config.sampleRate || 1,
         ignorePaths: config.ignorePaths || [],
         slowRequestThreshold: config.slowRequestThreshold || 1000,
@@ -38,7 +33,7 @@ export class MangoLogs {
 
     const loggerProvider = new DefaultLoggerProvider();
     const storageProvider =
-      config.storageType === "mssql"
+      config.storageType === 'mssql'
         ? new MSSQLStorageProvider(config.mssqlConfig!)
         : new InMemoryStorageProvider();
 
@@ -62,33 +57,6 @@ export class MangoLogs {
   }
 }
 
-// Core
-export { Monitor, MonitoredRequest, RequestData, ResponseData };
-export { DefaultLogger, DefaultLoggerProvider };
-
-// Interfaces
-export { MonitorConfig, ConfigProvider };
-export { Logger, LoggerProvider, LogLevel, LogEntry };
-export { StorageProvider, RequestStats };
-
-// Dashboard
-// Note: This will be implemented later
-// export { DashboardService } from './dashboard/dashboard-service';
-
-
-// Adapters
-export { ExpressAdapter };
-export { NodeAdapter };
-export { NestAdapter };
-
-// Storage Providers
-export { InMemoryStorageProvider };
-export { MSSQLStorageProvider };
-
-// Utility functions
-export { handleError, ApiMonitorError, isApiMonitorError };
-export { parseRequest, convertToRequestData, maskSensitiveData };
-
 /**
  * Creates and initializes a new Monitor instance.
  * @param config The configuration for MangoLogs
@@ -100,3 +68,6 @@ export function createMangoLogs(config: MangoLogsConfig): MangoLogs {
 
 // Maintain backwards compatibility
 export const createMonitor = createMangoLogs;
+
+// Re-export everything from mango-logs.ts
+export * from './mango-logs';
