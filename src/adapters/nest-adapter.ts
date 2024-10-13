@@ -1,6 +1,7 @@
 import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
+
 import { Monitor, RequestData, ResponseData } from '../core/monitor';
 
 @Injectable()
@@ -17,7 +18,7 @@ export class NestAdapter implements NestInterceptor {
       method: request.method,
       url: request.url,
       headers: request.headers,
-      body: request.body
+      body: request.body,
     };
 
     return next.handle().pipe(
@@ -26,11 +27,11 @@ export class NestAdapter implements NestInterceptor {
         const responseData: ResponseData = {
           statusCode: response.statusCode,
           headers: response.getHeaders(),
-          body: data
+          body: data,
         };
 
         this.monitor.logRequest(requestData, responseData, startTime, endTime);
-      })
+      }),
     );
   }
 }
